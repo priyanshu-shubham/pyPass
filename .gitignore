@@ -2,3 +2,6 @@
 venv
 secret.py
 __pycache__
+passwords.db
+# remove the ps.py
+ps.py

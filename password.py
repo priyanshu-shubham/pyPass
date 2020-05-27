@@ -53,7 +53,7 @@ class Password:
 
     @staticmethod
     def getKey(masterPassword):
-        """Returns Fermet.key from the master Password."""
+        """Returns Fernet.key from the master Password."""
         import base64
         from cryptography.fernet import Fernet
         from cryptography.hazmat.backends import default_backend
@@ -78,15 +78,15 @@ class Password:
         import getpass
         from cryptography.fernet import Fernet
         import secret
-        # Flag:There can be problems here since maybe the fetchone method in getAuthoriser returns a tuple in place of a string.
         authoriser = Password.getAuthoriser()
         for i in range(3):
             master = getpass.getpass(prompt="Enter Master Password:")
-            key = Password.getKey(master)
+            key = cls.getKey(master)
+            print(key)
             f = Fernet(key)
             _auth = f.decrypt(authoriser.encode())
             if _auth == secret.authoriser:
-                Password.__isValidated = 1
+                cls.__isValidated = 1
                 return key
             else:
                 print("Wrong Password")
@@ -98,15 +98,9 @@ class Password:
     def getAuthoriser():
         """Gets the authoriser text stored in database "passwords" which is encrypted"""
         import sqlite3
-        conn = sqlite3.connect("passwords")
+        conn = sqlite3.connect("passwords.db")
         cur = conn.cursor()
-        result = cur.execute("SELECT * FROM authoriser")
+        cur.execute("SELECT * FROM authoriser")
         authoriser = cur.fetchone()[0]
-        #  Flag : What cursor.fetchone returns.
-        print(authoriser)
         conn.close()
         return authoriser
-
-
-p1 = Password.fromString("HeyBro")
-print(p1.getKey("HElooThere"))
