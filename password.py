@@ -102,7 +102,7 @@ class Password:
         cur = conn.cursor()
         result = cur.execute("SELECT * FROM authoriser")
         authoriser = cur.fetchone()[0]
-        # Flag : What cursor.fetchone returns.
+        #  Flag : What cursor.fetchone returns.
         print(authoriser)
         conn.close()
         return authoriser
