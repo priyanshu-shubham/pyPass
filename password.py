@@ -1,6 +1,8 @@
 class Password:
+
     normalChars = list(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#_")
+
     specialChars = list("""~`!@#$%^&*()_-+={[}]|\:;"'<,>.?/""")
 
     def __init__(self, symbolSequence, length):
@@ -33,6 +35,10 @@ class Password:
         instance = cls(cls.normalChars, 5)
         instance.password = password
         return instance
+
+    @classmethod
+    def fromToken(cls, token):
+        pass
 
     def __str__(self):
         return self.password
