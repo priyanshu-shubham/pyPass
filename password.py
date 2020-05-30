@@ -1,3 +1,6 @@
+from secret import DATABASE
+
+
 class Password:
 
     normalChars = list(
@@ -44,9 +47,10 @@ class Password:
         return instance
 
     @classmethod
-    def fromToken(cls, token):
+    def fromToken(cls, token, key):
         """Initialize the Password Class from Token."""
-        pass
+        from cryptography.fernet import Fernet
+        return cls.fromString((Fernet(key).decrypt(token)).decode())
 
     def __str__(self):
         return self.password
@@ -55,7 +59,6 @@ class Password:
     def getKey(masterPassword):
         """Returns Fernet.key from the master Password."""
         import base64
-        from cryptography.fernet import Fernet
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -98,7 +101,7 @@ class Password:
     def getAuthoriser():
         """Gets the authoriser text stored in database "passwords" which is encrypted"""
         import sqlite3
-        conn = sqlite3.connect("passwords.db")
+        conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("SELECT * FROM authoriser")
         authoriser = cur.fetchone()[0]
