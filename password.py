@@ -8,7 +8,7 @@ class Password:
 
     specialChars = list("""~`!@#$%^&*()_-+={[}]|\:;"'<,>.?/""")
 
-    __isValidated = 0
+    row_format = "{:^25}" * (4)
 
     def __init__(self, password, username, site):
         self.password = password
@@ -43,11 +43,21 @@ class Password:
         self.username = f.encrypt(self.username.encode()).decode()
         self.site = f.encrypt(self.site.encode()).decode()
 
+    def show(self, index=""):
+        print(Password.row_format.format(
+            index, self.site, self.username, self.password))
+
     @classmethod
-    def fromToken(cls, token, key):
+    def fromToken(cls, tokens, key):
         """Initialize the Password Class from Token."""
+        plain = []
         from cryptography.fernet import Fernet
-        return cls.fromString((Fernet(key).decrypt(token)).decode())
+        f = Fernet(key)
+        for token in tokens:
+            _plain = f.decrypt(token.encode()).decode()
+            plain.append(_plain)
+        username, password, site = plain
+        return cls(password, username, site)
 
     def out(self):
         return self.password

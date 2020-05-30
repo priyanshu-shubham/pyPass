@@ -5,7 +5,6 @@ import sqlite3
 import getpass
 import cryptography
 from password import Password
-from time import sleep
 
 
 def initial():
@@ -43,6 +42,11 @@ def initial():
 
 def getCommand():
     menu = """
+
+
+
+
+
 	Instruction to use:  (Case don't matter)
 	1.To save the current provided password: Enter "Save" or "1" or "S".
 	2.To open the list of available passwords: Enter "Avl" or "2" or "A".
@@ -64,8 +68,8 @@ def save(username, password, site, key):
     conn.close()
     print(
         f"Password successfully saved with USERNAME= {username} and SITE={site}.")
-    input()
     print("Press Enter To Continue.")
+    input()
 
 
 def show(key):
@@ -74,4 +78,11 @@ def show(key):
     cur = conn.cursor()
     cur.execute("SELECT rowid,* FROM passwords")
     passwords = cur.fetchall()
-    print(passwords)
+    print(Password.row_format.format(
+        "Index", "Website", "Username", "Password"))
+    for i in passwords:
+        tokens = i[1:]
+        password = Password.fromToken(tokens, key)
+        password.show(i[0])
+        print("Press Enter To Continue.")
+        input()
