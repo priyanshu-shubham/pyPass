@@ -10,41 +10,38 @@ class Password:
 
     __isValidated = 0
 
-    def __init__(self, symbolSequence, length):
-        self.password = self.getPassword(symbolSequence, length)
+    def __init__(self, password, username, site):
+        self.password = password
+        self.username = username
+        self.site = site
 
-    def getPassword(self, symbolSequence, length):
+    @staticmethod
+    def getPassword(symbolSequence, length):
         """Returns a new password of length=length with characters from symbolSequence"""
         symbolArray = list(symbolSequence)
         import random
-        self.password = ""
+        password = ""
         # initializing with a new password
         intpos = [i for i in range(length)]
         random.shuffle(intpos)
         n = random.randint(1, length//4)
         # atleast n places where integer will be put depending on the first n values in intpos.
         for i in range(length):
-            self.password += symbolArray[random.randint(0, len(symbolArray)-1)]
+            password += symbolArray[random.randint(0, len(symbolArray)-1)]
         # putting in n integers
         for i in range(n):
-            self.password = self.password[:intpos[i]] + \
-                str(random.randint(0, 9))+self.password[intpos[i]+1:]
-        return self.password
+            password = password[:intpos[i]] + \
+                str(random.randint(0, 9))+password[intpos[i]+1:]
+        return password
 
     def encrypt(self, key):
-        """Encrypt the self.password"""
+        """Encrypts the username, password and site"""
         from cryptography.fernet import Fernet
         f = Fernet(key)
-        token = f.encrypt(self.password.encode()).decode()
-        self.token = token
-        return token
-
-    @classmethod
-    def fromString(cls, password):
-        """Initialize the Password class from string."""
-        instance = cls(cls.normalChars, 5)
-        instance.password = password
-        return instance
+        password = f.encrypt(self.password.encode()).decode()
+        self.password = password
+        self.username = f.encrypt(self.username.encode()).decode()
+        self.site = f.encrypt(self.site.encode()).decode()
 
     @classmethod
     def fromToken(cls, token, key):
@@ -52,8 +49,11 @@ class Password:
         from cryptography.fernet import Fernet
         return cls.fromString((Fernet(key).decrypt(token)).decode())
 
-    def __str__(self):
+    def out(self):
         return self.password
+
+    def __str__(self):
+        return "*"*len(self.password)
 
     @staticmethod
     def getKey(masterPassword):
@@ -76,20 +76,18 @@ class Password:
         key = base64.urlsafe_b64encode(kdf.derive(password))
         return key
 
-    @classmethod
-    def validate(cls):
+    @staticmethod
+    def validate():
         import getpass
         from cryptography.fernet import Fernet
         import secret
         authoriser = Password.getAuthoriser()
         for i in range(3):
             master = getpass.getpass(prompt="Enter Master Password:")
-            key = cls.getKey(master)
-            print(key)
+            key = Password.getKey(master)
             f = Fernet(key)
-            _auth = f.decrypt(authoriser.encode())
+            _auth = f.decrypt(authoriser.encode()).decode()
             if _auth == secret.authoriser:
-                cls.__isValidated = 1
                 return key
             else:
                 print("Wrong Password")
@@ -104,6 +102,9 @@ class Password:
         conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("SELECT * FROM authoriser")
-        authoriser = cur.fetchone()[0]
+        authoriser = cur.fetchone()
         conn.close()
-        return authoriser
+        if authoriser:
+            return authoriser[0]
+        else:
+            return None

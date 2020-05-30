@@ -1,10 +1,8 @@
-"""Creates all the dependencies when using the first time"""
-from cryptography.fernet import Fernet
 import secret
+import dependency
+from password import Password
 import os
-import sqlite3
-import getpass
-import cryptography
+import pyperclip
 
 print("""
 ---------------------------PASSWORD MANAGER----------------------------
@@ -27,53 +25,37 @@ print("""
             ██████████
 """)
 
-# PROMPT FOR entering master password
+recPass = Password.getPassword(Password.normalChars+Password.specialChars, 16)
+print("Recommended Password:", recPass)
+pyperclip.copy(recPass)
+print("The recommended password is copied to the clipboard")
+
+if not os.path.exists("passwordManager-passwords.db"):
+    dependency.initial()
+
+_auth = Password.getAuthoriser()
+if not _auth:
+    dependency.initial()
+    _auth = Password.getAuthoriser()
+
+key = Password.validate()
+
 while True:
-    masterPass = getpass.getpass(prompt="Enter a new MASTER PASSWORD: ")
-    _masterPass = getpass.getpass(prompt="Confirm the MASTER PASSWORD: ")
-    if masterPass == _masterPass:
-        print("----------------CONGRATS,NEW IDENTITY CREATED---------------")
-        break
+    response = dependency.getCommand().lower()
+    if response == "quit" or response == "4" or response == "q":
+        print("Thanks for Using.")
+        quit()
+
+    elif response == "1" or response == "save" or response == "s":
+        username = input("ENTER USERNAME FOR THIS PASSWORD: ")
+        site = input("ENTER THE WEBSITE FOR THIS USERNAME AND PASSWORD: ")
+        dependency.save(username, recPass, site, key)
+
+    elif response == "o" or response == "3" or response == "out":
+        key = Password.validate()
+
+    elif response == "a" or response == "2" or response == "avl":
+        dependency.show(key)
+
     else:
-        print("----------------Both Passwords Don't Match--------------------")
-
-
-# getkey
-def getKey(masterPassword):
-    """Returns Fernet.key from the master Password."""
-    import base64
-    from cryptography.fernet import Fernet
-    from cryptography.hazmat.backends import default_backend
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    password = masterPassword.encode()
-    salt = secret.salt
-    # binary sat using os.urandom(16)
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
-    )
-    key = base64.urlsafe_b64encode(kdf.derive(password))
-    return key
-
-
-# Creating the authoriser text
-authText = secret.authoriser
-fernet = Fernet(getKey(masterPass))
-cipher = fernet.encrypt(authText.encode())
-
-# Deleting if there exists an earlier database
-if os.path.exists(secret.DATABASE):
-    os.remove(secret.DATABASE)
-
-
-# Pushing the authoriser text in the database.
-conn = sqlite3.connect(secret.DATABASE)
-os.popen(f"attrib +h {secret.DATABASE}")
-conn.execute("CREATE TABLE authoriser (auth blob)")
-conn.execute("INSERT INTO authoriser VALUES (?)", (cipher,))
-conn.commit()
-conn.close()
+        print("INVALID COMMAND")
