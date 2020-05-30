@@ -3,5 +3,3 @@ venv
 secret.py
 __pycache__
 passwordManager-passwords.db
-# remove the ps.py
-ps.py
